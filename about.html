@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="About the ITDelhi Email Exposure Checker project.">
+  <meta name="theme-color" content="#07111f">
+  <title>About | ITDelhi Email Exposure Checker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">ID</span>
+      <span><strong>ITDelhi</strong><small>Email Exposure Checker</small></span>
+    </a>
+    <nav><a href="index.html#how">How it works</a><a href="privacy.html">Privacy</a><a href="about.html">About</a></nav>
+  </header>
+
+  <main class="container content-page">
+    <span class="eyebrow">About the project</span>
+    <h1>Email exposure checks with safer defaults.</h1>
+    <p class="lead">ITDelhi Email Exposure Checker is a privacy-first interface for helping users understand whether an email address they own—or are authorized to assess—may have security exposure.</p>
+
+    <section class="content-block">
+      <h2>What version 1 does</h2>
+      <p>The current version provides a production-style static frontend with consent enforcement, email validation, masking in results, security recommendations, and a clean integration point for a secure backend API.</p>
+    </section>
+
+    <section class="content-block">
+      <h2>What it deliberately does not do</h2>
+      <p>It does not pretend that an email is breached without verified data. It does not put private API keys into browser JavaScript. It does not automate account-recovery or password-reset flows to probe whether someone has an account.</p>
+    </section>
+
+    <section class="content-block">
+      <h2>Backend roadmap</h2>
+      <ul>
+        <li>Email ownership verification where appropriate.</li>
+        <li>Domain and mail-security posture checks.</li>
+        <li>Licensed or permitted breach-source integrations.</li>
+        <li>Public-web footprint results from permitted sources.</li>
+        <li>Removal guidance tied to the actual source of a finding.</li>
+        <li>Optional reports with minimal data retention.</li>
+      </ul>
+    </section>
+
+    <section class="content-block">
+      <h2>Project principle</h2>
+      <p class="inline-note">A privacy checker should not create a new privacy problem. Collect the minimum data needed, keep secrets server-side, and make every finding explainable and actionable.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <div><strong>ITDelhi Email Exposure Checker</strong><p>Built for authorized security awareness checks.</p></div>
+      <div class="footer-links"><a href="index.html">Home</a><a href="privacy.html">Privacy</a><a href="https://github.com/Faizalemam/email-exposure-checker" target="_blank" rel="noopener">GitHub</a></div>
+    </div>
+  </footer>
+</body>
+</html>
