@@ -33,10 +33,10 @@
       <div class="hero-copy">
         <span class="eyebrow"><span class="pulse-dot"></span> Privacy-first security tool</span>
         <h1>See where your email may be exposed.</h1>
-        <p class="hero-text">Verify your inbox, run email-domain security checks, and optionally use Gemini with Google Search grounding to research public web exposure.</p>
+        <p class="hero-text">Verify your inbox, run email-domain security checks, and use server-side AI web research to review public exposure. Gemini is used when available, with Groq Browser Search as the free fallback.</p>
         <div class="trust-row">
           <span>✓ Email OTP verification</span>
-          <span>✓ Gemini grounded search</span>
+          <span>✓ AI public-web research</span>
           <span>✓ API keys stay server-side</span>
         </div>
       </div>
@@ -56,7 +56,7 @@
 
           <label class="consent">
             <input id="consent" type="checkbox" required>
-            <span>I confirm I own this email address and authorize server-side security checks and, when configured, Gemini public-web research for this address.</span>
+            <span>I confirm I own this email address and authorize server-side security checks and public-web AI research for this address.</span>
           </label>
 
           <button class="primary-btn" id="scanBtn" type="submit">
@@ -109,7 +109,7 @@
           <div class="check-row"><span class="check-icon neutral" id="spfIcon">i</span><div><strong>SPF</strong><small id="spfStatus">Not checked</small></div></div>
           <div class="check-row"><span class="check-icon neutral" id="dmarcIcon">i</span><div><strong>DMARC</strong><small id="dmarcStatus">Not checked</small></div></div>
           <div class="check-row"><span class="check-icon warning" id="breachIcon">!</span><div><strong>Breach exposure</strong><small id="breachStatus">Secure provider required</small></div></div>
-          <div class="check-row"><span class="check-icon neutral" id="aiIcon">i</span><div><strong>Gemini web research</strong><small id="aiStatus">Not configured</small></div></div>
+          <div class="check-row"><span class="check-icon neutral" id="aiIcon">i</span><div><strong>AI web research</strong><small id="aiStatus">Not configured</small></div></div>
         </article>
 
         <article class="panel recommendation-card">
@@ -124,7 +124,7 @@
 
         <article class="panel ai-report-card" id="aiReportCard" hidden>
           <div class="ai-report-head">
-            <div><span class="eyebrow">Gemini + Google Search</span><h3>Grounded public-web research</h3></div>
+            <div><span class="eyebrow" id="aiProviderLabel">AI Web Research</span><h3>Public-web research</h3></div>
             <span class="status-badge">AI research</span>
           </div>
           <pre id="aiSummary"></pre>
@@ -135,21 +135,21 @@
         </article>
       </div>
 
-      <div class="notice-box"><strong>Important:</strong> Gemini research is limited to public web sources after email ownership verification. The tool does not use password-reset/login probes, private databases, stolen credentials, or hidden-account inference.</div>
+      <div class="notice-box"><strong>Important:</strong> AI research is limited to public web sources after email ownership verification. The tool does not use password-reset/login probes, private databases, stolen credentials, or hidden-account inference.</div>
     </section>
 
     <section class="info-section container" id="how">
       <div class="section-heading centered"><span class="eyebrow">How it works</span><h2>Designed to check exposure without exposing you further.</h2></div>
       <div class="feature-grid">
         <article class="feature-card"><span class="feature-number">01</span><h3>Verify ownership</h3><p>A one-time code is emailed to the address before the real scan runs.</p></article>
-        <article class="feature-card"><span class="feature-number">02</span><h3>Research safely</h3><p>MX, SPF and DMARC checks run server-side. Gemini can use Google Search grounding for public-web research with citations.</p></article>
+        <article class="feature-card"><span class="feature-number">02</span><h3>Research safely</h3><p>MX, SPF and DMARC checks run server-side. Gemini can use Google Search grounding, with Groq Browser Search as a fallback when Gemini quota is unavailable.</p></article>
         <article class="feature-card"><span class="feature-number">03</span><h3>Take action</h3><p>Use verified findings to change passwords, enable 2FA and submit source-level removal requests.</p></article>
       </div>
     </section>
 
     <section class="privacy-band" id="privacy">
       <div class="container privacy-inner">
-        <div><span class="eyebrow">Privacy by design</span><h2>Your email should not become another data point.</h2><p>The frontend does not save scans in localStorage or cookies. OTP data expires automatically. Gemini receives the verified address only when its API key is configured and the owner has authorized the scan.</p></div>
+        <div><span class="eyebrow">Privacy by design</span><h2>Your email should not become another data point.</h2><p>The frontend does not save scans in localStorage or cookies. OTP data expires automatically. The verified address is sent to the configured server-side AI provider only after the owner authorizes the scan.</p></div>
         <a class="secondary-btn" href="privacy.html">Privacy details</a>
       </div>
     </section>
