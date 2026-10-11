@@ -18,10 +18,7 @@
   <header class="site-header">
     <a class="brand" href="index.html" aria-label="ITDelhi Email Exposure Checker home">
       <span class="brand-mark">ID</span>
-      <span>
-        <strong>ITDelhi</strong>
-        <small>Email Exposure Checker</small>
-      </span>
+      <span><strong>ITDelhi</strong><small>Email Exposure Checker</small></span>
     </a>
     <nav aria-label="Primary navigation">
       <a href="#how">How it works</a>
@@ -35,11 +32,11 @@
       <div class="hero-copy">
         <span class="eyebrow"><span class="pulse-dot"></span> Privacy-first security tool</span>
         <h1>See where your email may be exposed.</h1>
-        <p class="hero-text">Check the security posture of an email address you own or are authorized to assess. The public frontend does not store your email, and sensitive lookup logic belongs on a secure backend.</p>
+        <p class="hero-text">Check an email address you own. When the secure backend is connected, we verify ownership by email OTP before any exposure lookup runs.</p>
         <div class="trust-row">
-          <span>✓ No browser storage</span>
+          <span>✓ Email OTP verification</span>
           <span>✓ No password needed</span>
-          <span>✓ Consent required</span>
+          <span>✓ API keys stay server-side</span>
         </div>
       </div>
 
@@ -54,37 +51,47 @@
             <span class="input-icon">@</span>
             <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required aria-describedby="emailHelp formError">
           </div>
-          <p class="field-help" id="emailHelp">Use only your own email or one you have explicit permission to check.</p>
+          <p class="field-help" id="emailHelp">Use your own email address. A 6-digit verification code will be sent before a real scan.</p>
 
           <label class="consent">
             <input id="consent" type="checkbox" required>
-            <span>I confirm I own this email address or I am authorized to check it.</span>
+            <span>I confirm I own this email address and authorize this security check.</span>
           </label>
 
           <button class="primary-btn" id="scanBtn" type="submit">
-            <span>Check my exposure</span>
-            <span aria-hidden="true">→</span>
+            <span>Check my exposure</span><span aria-hidden="true">→</span>
           </button>
+
+          <div id="otpPanel" hidden>
+            <label for="otpCode">Verification code</label>
+            <div class="input-wrap">
+              <span class="input-icon">#</span>
+              <input id="otpCode" name="otpCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="6-digit code">
+            </div>
+            <p class="field-help" id="otpHelp">Enter the code sent to your inbox. It expires in 10 minutes.</p>
+            <button class="primary-btn" id="verifyBtn" type="button">
+              <span>Verify & scan</span><span aria-hidden="true">→</span>
+            </button>
+          </div>
+
           <p class="form-error" id="formError" role="alert" aria-live="polite"></p>
+          <p class="field-help" id="formSuccess" role="status" aria-live="polite"></p>
         </form>
 
-        <div class="microcopy">This version performs safe local checks only until a secure backend API is connected.</div>
+        <div class="microcopy" id="microcopy">Safe local validation only until the secure backend URL is connected.</div>
       </div>
     </section>
 
     <section class="results container" id="results" hidden aria-live="polite">
       <div class="section-heading">
-        <div>
-          <span class="eyebrow">Scan summary</span>
-          <h2>Your exposure dashboard</h2>
-        </div>
+        <div><span class="eyebrow">Scan summary</span><h2>Your exposure dashboard</h2></div>
         <button class="ghost-btn" id="newScanBtn" type="button">New scan</button>
       </div>
 
       <div class="results-grid">
         <article class="score-card panel">
           <div class="score-ring" id="scoreRing" style="--score: 0">
-            <div><strong id="scoreValue">0</strong><span>/100</span></div>
+            <div><strong id="scoreValue">—</strong><span>/100</span></div>
           </div>
           <div>
             <span class="risk-label" id="riskLabel">Awaiting data</span>
@@ -94,23 +101,13 @@
         </article>
 
         <article class="panel scan-details">
-          <h3>Checks</h3>
-          <div class="check-row">
-            <span class="check-icon neutral">i</span>
-            <div><strong>Email format</strong><small id="formatStatus">Not checked</small></div>
-          </div>
-          <div class="check-row">
-            <span class="check-icon neutral">i</span>
-            <div><strong>Domain detected</strong><small id="domainStatus">Not checked</small></div>
-          </div>
-          <div class="check-row">
-            <span class="check-icon warning">!</span>
-            <div><strong>Breach exposure</strong><small id="breachStatus">Secure backend required</small></div>
-          </div>
-          <div class="check-row">
-            <span class="check-icon warning">!</span>
-            <div><strong>Public profile footprint</strong><small id="profileStatus">Secure backend required</small></div>
-          </div>
+          <h3>Verified checks</h3>
+          <div class="check-row"><span class="check-icon neutral" id="formatIcon">i</span><div><strong>Email format</strong><small id="formatStatus">Not checked</small></div></div>
+          <div class="check-row"><span class="check-icon neutral" id="verifyIcon">i</span><div><strong>Email ownership</strong><small id="verifyStatus">Not verified</small></div></div>
+          <div class="check-row"><span class="check-icon neutral" id="mxIcon">i</span><div><strong>Mail routing (MX)</strong><small id="mxStatus">Not checked</small></div></div>
+          <div class="check-row"><span class="check-icon neutral" id="spfIcon">i</span><div><strong>SPF</strong><small id="spfStatus">Not checked</small></div></div>
+          <div class="check-row"><span class="check-icon neutral" id="dmarcIcon">i</span><div><strong>DMARC</strong><small id="dmarcStatus">Not checked</small></div></div>
+          <div class="check-row"><span class="check-icon warning" id="breachIcon">!</span><div><strong>Breach exposure</strong><small id="breachStatus">Secure provider required</small></div></div>
         </article>
 
         <article class="panel recommendation-card">
@@ -124,42 +121,21 @@
         </article>
       </div>
 
-      <div class="notice-box">
-        <strong>Important:</strong> This frontend never fabricates breach results. Real exposure findings will only appear after a trusted backend/API is connected.
-      </div>
+      <div class="notice-box"><strong>Important:</strong> No fake breach result is generated. If the breach provider is not configured, the dashboard says so explicitly.</div>
     </section>
 
     <section class="info-section container" id="how">
-      <div class="section-heading centered">
-        <span class="eyebrow">How it works</span>
-        <h2>Designed to check exposure without exposing you further.</h2>
-      </div>
+      <div class="section-heading centered"><span class="eyebrow">How it works</span><h2>Designed to check exposure without exposing you further.</h2></div>
       <div class="feature-grid">
-        <article class="feature-card">
-          <span class="feature-number">01</span>
-          <h3>Verify consent</h3>
-          <p>The checker is intended for your own email addresses or authorized security assessments only.</p>
-        </article>
-        <article class="feature-card">
-          <span class="feature-number">02</span>
-          <h3>Analyze safely</h3>
-          <p>Public frontend validation happens locally. API credentials and sensitive logic remain off GitHub Pages.</p>
-        </article>
-        <article class="feature-card">
-          <span class="feature-number">03</span>
-          <h3>Take action</h3>
-          <p>Results should lead to practical steps such as password changes, 2FA, and source-level removal requests.</p>
-        </article>
+        <article class="feature-card"><span class="feature-number">01</span><h3>Verify ownership</h3><p>A one-time code is emailed to the address before the real scan runs.</p></article>
+        <article class="feature-card"><span class="feature-number">02</span><h3>Analyze safely</h3><p>MX, SPF and DMARC checks run server-side. Optional breach-provider credentials remain in Script Properties.</p></article>
+        <article class="feature-card"><span class="feature-number">03</span><h3>Take action</h3><p>Use verified findings to change passwords, enable 2FA and submit source-level removal requests.</p></article>
       </div>
     </section>
 
     <section class="privacy-band" id="privacy">
       <div class="container privacy-inner">
-        <div>
-          <span class="eyebrow">Privacy by design</span>
-          <h2>Your email should not become another data point.</h2>
-          <p>The static site does not save scans in localStorage or cookies. When a backend is added, data retention should remain opt-in and minimal.</p>
-        </div>
+        <div><span class="eyebrow">Privacy by design</span><h2>Your email should not become another data point.</h2><p>The frontend does not save scans in localStorage or cookies. OTP data is temporary and expires automatically in the backend cache.</p></div>
         <a class="secondary-btn" href="privacy.html">Privacy details</a>
       </div>
     </section>
@@ -167,18 +143,12 @@
 
   <footer>
     <div class="container footer-inner">
-      <div>
-        <strong>ITDelhi Email Exposure Checker</strong>
-        <p>Security awareness tool for consented email checks.</p>
-      </div>
-      <div class="footer-links">
-        <a href="privacy.html">Privacy</a>
-        <a href="about.html">About</a>
-        <a href="https://github.com/Faizalemam/email-exposure-checker" target="_blank" rel="noopener">GitHub</a>
-      </div>
+      <div><strong>ITDelhi Email Exposure Checker</strong><p>Security awareness tool for verified email checks.</p></div>
+      <div class="footer-links"><a href="privacy.html">Privacy</a><a href="about.html">About</a><a href="https://github.com/Faizalemam/email-exposure-checker" target="_blank" rel="noopener">GitHub</a></div>
     </div>
   </footer>
 
+  <script src="js/config.js" defer></script>
   <script src="js/app.js" defer></script>
 </body>
 </html>
