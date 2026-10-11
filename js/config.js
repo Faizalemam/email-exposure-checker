@@ -4,3 +4,11 @@ window.EMAIL_EXPOSURE_CONFIG = Object.freeze({
   // The Search Element is client-side; this ID is not a secret.
   googlePseCx: ''
 });
+
+// Load the optional Google Programmable Search integration.
+(() => {
+  const script = document.createElement('script');
+  script.src = 'js/google-pse.js';
+  script.defer = true;
+  document.head.appendChild(script);
+})();
