@@ -30,6 +30,7 @@
   const breachStatus = document.getElementById('breachStatus');
   const aiStatus = document.getElementById('aiStatus');
   const aiReportCard = document.getElementById('aiReportCard');
+  const aiProviderLabel = document.getElementById('aiProviderLabel');
   const aiSummary = document.getElementById('aiSummary');
   const aiSourcesWrap = document.getElementById('aiSourcesWrap');
   const aiSources = document.getElementById('aiSources');
@@ -38,7 +39,7 @@
 
   modeBadge.textContent = API_ENDPOINT ? 'Secure API' : 'Frontend demo';
   microcopy.textContent = API_ENDPOINT
-    ? 'Ownership is verified by a 6-digit email code before DNS, breach-provider and Gemini public-web checks run.'
+    ? 'Ownership is verified by a 6-digit email code before DNS, breach-provider and AI public-web checks run.'
     : 'Safe local validation only. Connect the Apps Script /exec URL in js/config.js to enable OTP and real checks.';
   scanButton.querySelector('span:first-child').textContent = API_ENDPOINT ? 'Send verification code' : 'Check local validation';
 
@@ -86,7 +87,7 @@
 
   async function apiCall(payload) {
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 45000);
+    const timeout = window.setTimeout(() => controller.abort(), 90000);
     try {
       const response = await fetch(API_ENDPOINT, {
         method: 'POST',
@@ -107,6 +108,7 @@
 
   function resetAiReport() {
     if (aiReportCard) aiReportCard.hidden = true;
+    if (aiProviderLabel) aiProviderLabel.textContent = 'AI Web Research';
     if (aiSummary) aiSummary.textContent = '';
     if (aiSources) aiSources.replaceChildren();
     if (aiSourcesWrap) aiSourcesWrap.hidden = true;
@@ -114,35 +116,83 @@
 
   function renderAiReport(data) {
     resetAiReport();
-    if (!data.gemini_configured) {
-      aiStatus.textContent = 'Gemini API key not configured';
+
+    const provider = String(data.ai_provider || '').toLowerCase();
+    const summary = String(data.ai_summary || '').trim();
+
+    if (provider && summary) {
+      if (provider === 'gemini') {
+        aiStatus.textContent = 'Gemini grounded Google Search completed';
+        if (aiProviderLabel) aiProviderLabel.textContent = 'Gemini + Google Search';
+      } else if (provider === 'groq') {
+        aiStatus.textContent = 'Groq Browser Search fallback completed';
+        if (aiProviderLabel) aiProviderLabel.textContent = 'Groq Browser Search';
+      } else {
+        aiStatus.textContent = 'AI public-web research completed';
+        if (aiProviderLabel) aiProviderLabel.textContent = 'AI Web Research';
+      }
+
+      setIcon('aiIcon', true);
+      aiReportCard.hidden = false;
+      aiSummary.textContent = summary;
+
+      const sources = Array.isArray(data.ai_sources) ? data.ai_sources : [];
+      if (sources.length) {
+        sources.forEach((source, index) => {
+          if (!source || !source.url) return;
+          try {
+            const a = document.createElement('a');
+            a.href = source.url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.textContent = `${index + 1}. ${source.title || new URL(source.url).hostname}`;
+            aiSources.appendChild(a);
+          } catch (_) {}
+        });
+        aiSourcesWrap.hidden = aiSources.children.length === 0;
+      }
+      return;
+    }
+
+    const geminiConfigured = Boolean(data.gemini_configured);
+    const groqConfigured = Boolean(data.groq_configured);
+    const geminiStatus = Number(data.gemini_error_status || 0);
+    const groqStatus = Number(data.groq_error_status || 0);
+
+    if (!geminiConfigured && !groqConfigured) {
+      aiStatus.textContent = 'No AI web-research API configured';
       setIcon('aiIcon', null);
       return;
     }
-    if (!data.gemini_ok || !data.ai_summary) {
-      aiStatus.textContent = 'Gemini configured, but research did not return a usable result';
+
+    if (geminiStatus === 429 && groqConfigured && !data.groq_ok) {
+      aiStatus.textContent = groqStatus
+        ? `Gemini quota exhausted; Groq fallback failed (HTTP ${groqStatus})`
+        : 'Gemini quota exhausted; Groq fallback did not return a usable result';
       setIcon('aiIcon', false);
       return;
     }
 
-    aiStatus.textContent = 'Grounded Google Search research completed';
-    setIcon('aiIcon', true);
-    aiReportCard.hidden = false;
-    aiSummary.textContent = data.ai_summary;
-
-    const sources = Array.isArray(data.ai_sources) ? data.ai_sources : [];
-    if (sources.length) {
-      sources.forEach((source, index) => {
-        if (!source || !source.url) return;
-        const a = document.createElement('a');
-        a.href = source.url;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.textContent = `${index + 1}. ${source.title || new URL(source.url).hostname}`;
-        aiSources.appendChild(a);
-      });
-      aiSourcesWrap.hidden = aiSources.children.length === 0;
+    if (geminiStatus === 429 && !groqConfigured) {
+      aiStatus.textContent = 'Gemini quota exhausted; Groq fallback not configured';
+      setIcon('aiIcon', false);
+      return;
     }
+
+    if (groqConfigured && groqStatus) {
+      aiStatus.textContent = `Groq web research failed (HTTP ${groqStatus})`;
+      setIcon('aiIcon', false);
+      return;
+    }
+
+    if (geminiConfigured && geminiStatus) {
+      aiStatus.textContent = `Gemini web research failed (HTTP ${geminiStatus})`;
+      setIcon('aiIcon', false);
+      return;
+    }
+
+    aiStatus.textContent = 'AI research did not return a usable result';
+    setIcon('aiIcon', false);
   }
 
   function renderDemo(email) {
@@ -260,9 +310,15 @@
       const data = await apiCall({ action: 'verify_and_scan', email, code, consent: true });
       if (!data.ok) throw new Error(data.message || 'Verification failed.');
       renderApiResult(email, data);
-      successBox.textContent = data.gemini_ok
-        ? 'Email verified. Security checks and Gemini grounded web research completed.'
-        : 'Email verified and security scan completed.';
+
+      if (data.ai_provider === 'groq') {
+        successBox.textContent = 'Email verified. Security checks and Groq Browser Search research completed.';
+      } else if (data.ai_provider === 'gemini') {
+        successBox.textContent = 'Email verified. Security checks and Gemini grounded web research completed.';
+      } else {
+        successBox.textContent = 'Email verified and security scan completed.';
+      }
+
       results.hidden = false;
       results.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (error) {
