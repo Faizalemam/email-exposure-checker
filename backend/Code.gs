@@ -3,21 +3,26 @@ const OTP_TTL_SECONDS = 600;
 const OTP_COOLDOWN_SECONDS = 60;
 const MAX_OTP_REQUESTS_PER_HOUR = 5;
 const MAX_VERIFY_ATTEMPTS = 6;
+const GEMINI_MODEL = 'gemini-3.8-flash';
+const AI_CACHE_SECONDS = 1800;
 
 function setupProject() {
   const props = PropertiesService.getScriptProperties();
   if (!props.getProperty('OTP_SECRET')) {
     props.setProperty('OTP_SECRET', Utilities.getUuid() + Utilities.getUuid());
   }
-  Logger.log('Setup complete. Optional: add HIBP_API_KEY in Script Properties for breach checks.');
+  Logger.log('Setup complete. Add GEMINI_API_KEY for grounded AI web research and optionally HIBP_API_KEY for breach checks.');
 }
 
 function doGet() {
+  const props = PropertiesService.getScriptProperties();
   return json_({
     ok: true,
     service: APP_NAME,
     status: 'online',
-    hibp_configured: Boolean(PropertiesService.getScriptProperties().getProperty('HIBP_API_KEY'))
+    hibp_configured: Boolean(props.getProperty('HIBP_API_KEY')),
+    gemini_configured: Boolean(props.getProperty('GEMINI_API_KEY')),
+    gemini_model: GEMINI_MODEL
   });
 }
 
@@ -39,7 +44,7 @@ function doPost(e) {
 function requestOtp_(body) {
   const email = normalizeEmail_(body.email);
   if (!isValidEmail_(email)) return json_({ ok: false, code: 'INVALID_EMAIL', message: 'Enter a valid email address.' });
-  if (body.consent !== true) return json_({ ok: false, code: 'CONSENT_REQUIRED', message: 'Ownership or authorization confirmation is required.' });
+  if (body.consent !== true) return json_({ ok: false, code: 'CONSENT_REQUIRED', message: 'Ownership confirmation is required.' });
 
   const cache = CacheService.getScriptCache();
   const emailKey = digestHex_(email);
@@ -56,8 +61,7 @@ function requestOtp_(body) {
   }
 
   const otp = String(Math.floor(100000 + Math.random() * 900000));
-  const secret = getOtpSecret_();
-  const tokenHash = digestHex_(email + '|' + otp + '|' + secret);
+  const tokenHash = digestHex_(email + '|' + otp + '|' + getOtpSecret_());
 
   cache.put('otp:' + emailKey, tokenHash, OTP_TTL_SECONDS);
   cache.put('attempts:' + emailKey, '0', OTP_TTL_SECONDS);
@@ -83,7 +87,7 @@ function verifyAndScan_(body) {
   const code = String(body.code || '').trim();
   if (!isValidEmail_(email)) return json_({ ok: false, code: 'INVALID_EMAIL', message: 'Enter a valid email address.' });
   if (!/^\d{6}$/.test(code)) return json_({ ok: false, code: 'INVALID_CODE', message: 'Enter the 6-digit verification code.' });
-  if (body.consent !== true) return json_({ ok: false, code: 'CONSENT_REQUIRED', message: 'Ownership or authorization confirmation is required.' });
+  if (body.consent !== true) return json_({ ok: false, code: 'CONSENT_REQUIRED', message: 'Ownership confirmation is required.' });
 
   const cache = CacheService.getScriptCache();
   const emailKey = digestHex_(email);
@@ -116,6 +120,7 @@ function scanVerifiedEmail_(email) {
   const spf = dnsResolve_(domain, 'TXT').answers.some(function(v) { return /^v=spf1\b/i.test(v); });
   const dmarc = dnsResolve_('_dmarc.' + domain, 'TXT').answers.some(function(v) { return /^v=DMARC1\b/i.test(v); });
   const breach = lookupHibp_(email);
+  const ai = lookupGeminiWeb_(email, domain);
 
   let riskScore = null;
   let riskLabel = 'Breach API not configured';
@@ -143,11 +148,99 @@ function scanVerifiedEmail_(email) {
     breach_count: breach.configured && breach.ok ? breach.count : null,
     breach_names: breach.configured && breach.ok ? breach.names : [],
     breach_provider_configured: breach.configured,
+    gemini_configured: ai.configured,
+    gemini_ok: ai.ok,
+    ai_summary: ai.text || '',
+    ai_sources: ai.sources || [],
+    ai_search_queries: ai.queries || [],
     public_profiles: null,
     risk_score: riskScore,
     risk_label: riskLabel,
     summary: summary
   };
+}
+
+function lookupGeminiWeb_(email, domain) {
+  const key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!key) return { configured: false, ok: false, text: '', sources: [], queries: [] };
+
+  const cache = CacheService.getScriptCache();
+  const cacheKey = 'gemini:' + digestHex_(email);
+  const cached = cache.get(cacheKey);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      parsed.configured = true;
+      return parsed;
+    } catch (e) {}
+  }
+
+  const prompt = [
+    'You are performing a privacy and cybersecurity self-audit for the verified owner of this email address.',
+    'Search the public web deeply using Google Search grounding for exact public mentions of: ' + email + ' and relevant security information about its domain ' + domain + '.',
+    'Focus on: public pages containing the exact email, exposed contact pages, forum or document mentions, developer profiles, public breach/news references, domain security or impersonation risks, and practical removal/security actions.',
+    'Do not use or suggest password-reset, login, forgot-password, account-recovery, credential-stuffing, private databases, stolen data, passwords, authentication secrets, or methods to infer hidden accounts.',
+    'Do not infer sensitive traits. Do not report unrelated people who merely have a similar name.',
+    'Only state findings supported by public web sources. Distinguish confirmed findings from uncertainty.',
+    'Return a concise security report in plain text with headings: Public Exposure, Domain / Impersonation Risk, Recommended Actions. Include no more than 8 key findings.'
+  ].join('\n');
+
+  try {
+    const res = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
+      method: 'post',
+      muteHttpExceptions: true,
+      contentType: 'application/json',
+      headers: { 'x-goog-api-key': key },
+      payload: JSON.stringify({
+        model: GEMINI_MODEL,
+        input: prompt,
+        tools: [{ type: 'google_search' }]
+      })
+    });
+
+    if (res.getResponseCode() < 200 || res.getResponseCode() >= 300) {
+      console.error('Gemini error ' + res.getResponseCode() + ': ' + res.getContentText());
+      return { configured: true, ok: false, text: '', sources: [], queries: [] };
+    }
+
+    const data = JSON.parse(res.getContentText() || '{}');
+    const interaction = data.interaction || data;
+    const steps = interaction.steps || [];
+    let text = interaction.output_text || interaction.outputText || '';
+    const sources = [];
+    const queries = [];
+
+    steps.forEach(function(step) {
+      if (step.type === 'google_search_call' && step.arguments && Array.isArray(step.arguments.queries)) {
+        step.arguments.queries.forEach(function(q) { if (q && queries.indexOf(q) === -1) queries.push(q); });
+      }
+      if (step.type === 'model_output' && Array.isArray(step.content)) {
+        step.content.forEach(function(block) {
+          if (block.type === 'text') {
+            if (!text && block.text) text = block.text;
+            (block.annotations || []).forEach(function(a) {
+              if (a.type === 'url_citation' && a.url && !sources.some(function(s) { return s.url === a.url; })) {
+                sources.push({ title: String(a.title || a.url).slice(0, 180), url: String(a.url).slice(0, 1200) });
+              }
+            });
+          }
+        });
+      }
+    });
+
+    const result = {
+      configured: true,
+      ok: Boolean(text),
+      text: String(text || '').slice(0, 12000),
+      sources: sources.slice(0, 12),
+      queries: queries.slice(0, 12)
+    };
+    cache.put(cacheKey, JSON.stringify(result), AI_CACHE_SECONDS);
+    return result;
+  } catch (err) {
+    console.error('Gemini lookup failed: ' + err);
+    return { configured: true, ok: false, text: '', sources: [], queries: [] };
+  }
 }
 
 function lookupHibp_(email) {
