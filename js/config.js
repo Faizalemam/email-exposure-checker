@@ -1,5 +1,3 @@
 window.EMAIL_EXPOSURE_CONFIG = Object.freeze({
-  // Paste the deployed Google Apps Script /exec URL here.
-  // Example: https://script.google.com/macros/s/DEPLOYMENT_ID/exec
-  apiEndpoint: ''
+  apiEndpoint: 'https://script.google.com/macros/s/AKfycbzbhglW31sClfNXf2Mwhmz0GgCastO9pjBA2Ucs2Denmc8fVs4QCOUzeWDx3-_mpJ17/exec'
 });
