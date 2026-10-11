@@ -1,18 +1,40 @@
 # ITDelhi Email Exposure Checker
 
-Privacy-first email exposure checking frontend.
+Privacy-first email exposure checker with a GitHub Pages frontend and an optional Google Apps Script backend.
 
-## Status
+## Current status
 
-Frontend v1 is included in this repository. Real breach / OSINT lookups must be performed by a secure backend so API keys and sensitive logic are never exposed in GitHub Pages JavaScript.
+- Responsive frontend: ready
+- Email ownership OTP flow: ready
+- Google Apps Script backend: ready
+- MX / SPF / DMARC checks: ready
+- Optional Have I Been Pwned integration: ready for API key
+- Public-profile OSINT: intentionally not enabled in v1
+
+## Architecture
+
+- `index.html` — scanner and result dashboard
+- `css/style.css` — responsive UI
+- `js/config.js` — deployed backend URL only; no secrets
+- `js/app.js` — OTP + scan client logic
+- `backend/Code.gs` — OTP verification, DNS checks and optional breach lookup
+- `backend/appsscript.json` — Apps Script manifest
+- `backend/README.md` — backend deployment steps
 
 ## Safety model
 
-- Only scan email addresses you own or have permission to check.
+- Real scans require control of the email inbox through a 6-digit OTP.
 - Do not automate account-recovery or password-reset endpoints to infer account existence.
-- Keep API keys and credentials off the frontend.
-- Do not store scanned email addresses unless the user explicitly opts in.
+- API keys and credentials stay in backend Script Properties.
+- OTP hashes are temporary and expire from cache.
+- The frontend does not save scanned email addresses in localStorage or cookies.
 
 ## Deployment
 
-Serve this repository as a static site with GitHub Pages. When a backend is ready, set `API_ENDPOINT` in `js/app.js` to the secure HTTPS endpoint.
+1. Publish the repository frontend with GitHub Pages.
+2. Deploy the code in `backend/` as a Google Apps Script Web App.
+3. Copy the Apps Script `/exec` URL.
+4. Put the URL in `js/config.js` as `apiEndpoint`.
+5. Optionally add `HIBP_API_KEY` in Apps Script Script Properties for verified breach checks.
+
+See `backend/README.md` for detailed backend instructions.
