@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Privacy and data-removal guidance for ITDelhi Email Exposure Checker.">
+  <meta name="theme-color" content="#07111f">
+  <title>Privacy & Removal Guidance | ITDelhi Email Exposure Checker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">ID</span>
+      <span><strong>ITDelhi</strong><small>Email Exposure Checker</small></span>
+    </a>
+    <nav><a href="index.html#how">How it works</a><a href="privacy.html">Privacy</a><a href="about.html">About</a></nav>
+  </header>
+
+  <main class="container content-page">
+    <span class="eyebrow">Privacy & removal</span>
+    <h1>Reduce exposure at the source.</h1>
+    <p class="lead">Removing a result from one search service does not automatically remove the original data. The safest approach is to identify the source, secure the affected account, and request deletion or suppression where appropriate.</p>
+
+    <section class="content-block">
+      <h2>How this frontend handles your email</h2>
+      <p>The current GitHub Pages frontend validates the address locally in your browser. It does not save scans in localStorage or cookies. Until a secure backend is configured, it does not perform breach or public-profile lookups.</p>
+      <p class="inline-note">Do not add API keys, service credentials, private datasets, or breach data directly to the public JavaScript files in this repository.</p>
+    </section>
+
+    <section class="content-block">
+      <h2>If your email appears in a breach</h2>
+      <ul>
+        <li>Change the password on the affected service using a clean, trusted device.</li>
+        <li>Change reused passwords on any other accounts that shared the same password.</li>
+        <li>Enable multi-factor authentication, preferably an authenticator app or security key.</li>
+        <li>Review active sessions, recovery email addresses, phone numbers, and forwarding rules.</li>
+      </ul>
+    </section>
+
+    <section class="content-block">
+      <h2>If personal details are public</h2>
+      <ul>
+        <li>Find the original website or profile displaying the information.</li>
+        <li>Use that service's privacy, account deletion, or opt-out process.</li>
+        <li>After source removal, request search-engine cache/result removal where applicable.</li>
+        <li>Keep a record of removal requests without storing unnecessary identity documents.</li>
+      </ul>
+    </section>
+
+    <section class="content-block">
+      <h2>Verification safety</h2>
+      <p>Prefer ownership verification through the affected email address. Avoid uploading passports, national IDs, or other high-value identity documents unless the recipient is verified, the request is necessary, and the transfer method is appropriately protected.</p>
+    </section>
+
+    <section class="content-block">
+      <h2>Authorized use only</h2>
+      <p>This project is designed for self-checks and authorized security assessments. It should not automate password-reset, account-recovery, or other sensitive endpoints to determine whether a person has an account on a service.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <div><strong>ITDelhi Email Exposure Checker</strong><p>Privacy-first security awareness.</p></div>
+      <div class="footer-links"><a href="index.html">Home</a><a href="about.html">About</a></div>
+    </div>
+  </footer>
+</body>
+</html>
