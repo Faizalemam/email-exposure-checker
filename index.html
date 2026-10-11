@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Privacy-first email exposure checker by ITDelhi.">
+  <meta name="theme-color" content="#07111f">
+  <title>ITDelhi Email Exposure Checker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="bg-orb bg-orb-one"></div>
+  <div class="bg-orb bg-orb-two"></div>
+
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="ITDelhi Email Exposure Checker home">
+      <span class="brand-mark">ID</span>
+      <span>
+        <strong>ITDelhi</strong>
+        <small>Email Exposure Checker</small>
+      </span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <a href="#how">How it works</a>
+      <a href="#privacy">Privacy</a>
+      <a href="about.html">About</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero container">
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="pulse-dot"></span> Privacy-first security tool</span>
+        <h1>See where your email may be exposed.</h1>
+        <p class="hero-text">Check the security posture of an email address you own or are authorized to assess. The public frontend does not store your email, and sensitive lookup logic belongs on a secure backend.</p>
+        <div class="trust-row">
+          <span>✓ No browser storage</span>
+          <span>✓ No password needed</span>
+          <span>✓ Consent required</span>
+        </div>
+      </div>
+
+      <div class="scanner-card" id="scanner">
+        <div class="card-topline">
+          <span>Exposure scan</span>
+          <span class="status-badge" id="modeBadge">Frontend demo</span>
+        </div>
+        <form id="scanForm" novalidate>
+          <label for="email">Email address</label>
+          <div class="input-wrap">
+            <span class="input-icon">@</span>
+            <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required aria-describedby="emailHelp formError">
+          </div>
+          <p class="field-help" id="emailHelp">Use only your own email or one you have explicit permission to check.</p>
+
+          <label class="consent">
+            <input id="consent" type="checkbox" required>
+            <span>I confirm I own this email address or I am authorized to check it.</span>
+          </label>
+
+          <button class="primary-btn" id="scanBtn" type="submit">
+            <span>Check my exposure</span>
+            <span aria-hidden="true">→</span>
+          </button>
+          <p class="form-error" id="formError" role="alert" aria-live="polite"></p>
+        </form>
+
+        <div class="microcopy">This version performs safe local checks only until a secure backend API is connected.</div>
+      </div>
+    </section>
+
+    <section class="results container" id="results" hidden aria-live="polite">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Scan summary</span>
+          <h2>Your exposure dashboard</h2>
+        </div>
+        <button class="ghost-btn" id="newScanBtn" type="button">New scan</button>
+      </div>
+
+      <div class="results-grid">
+        <article class="score-card panel">
+          <div class="score-ring" id="scoreRing" style="--score: 0">
+            <div><strong id="scoreValue">0</strong><span>/100</span></div>
+          </div>
+          <div>
+            <span class="risk-label" id="riskLabel">Awaiting data</span>
+            <h3 id="maskedEmail">—</h3>
+            <p id="scoreNote">A secure backend is not connected yet, so no breach claim is being made.</p>
+          </div>
+        </article>
+
+        <article class="panel scan-details">
+          <h3>Checks</h3>
+          <div class="check-row">
+            <span class="check-icon neutral">i</span>
+            <div><strong>Email format</strong><small id="formatStatus">Not checked</small></div>
+          </div>
+          <div class="check-row">
+            <span class="check-icon neutral">i</span>
+            <div><strong>Domain detected</strong><small id="domainStatus">Not checked</small></div>
+          </div>
+          <div class="check-row">
+            <span class="check-icon warning">!</span>
+            <div><strong>Breach exposure</strong><small id="breachStatus">Secure backend required</small></div>
+          </div>
+          <div class="check-row">
+            <span class="check-icon warning">!</span>
+            <div><strong>Public profile footprint</strong><small id="profileStatus">Secure backend required</small></div>
+          </div>
+        </article>
+
+        <article class="panel recommendation-card">
+          <h3>Recommended actions</h3>
+          <ol>
+            <li><span>1</span><div><strong>Use a unique password</strong><small>Never reuse the same password across services.</small></div></li>
+            <li><span>2</span><div><strong>Enable 2FA</strong><small>Prefer an authenticator app or security key where available.</small></div></li>
+            <li><span>3</span><div><strong>Review old accounts</strong><small>Delete accounts you no longer use and remove unnecessary public data.</small></div></li>
+          </ol>
+          <a class="text-link" href="privacy.html">Read removal & privacy guidance →</a>
+        </article>
+      </div>
+
+      <div class="notice-box">
+        <strong>Important:</strong> This frontend never fabricates breach results. Real exposure findings will only appear after a trusted backend/API is connected.
+      </div>
+    </section>
+
+    <section class="info-section container" id="how">
+      <div class="section-heading centered">
+        <span class="eyebrow">How it works</span>
+        <h2>Designed to check exposure without exposing you further.</h2>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card">
+          <span class="feature-number">01</span>
+          <h3>Verify consent</h3>
+          <p>The checker is intended for your own email addresses or authorized security assessments only.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-number">02</span>
+          <h3>Analyze safely</h3>
+          <p>Public frontend validation happens locally. API credentials and sensitive logic remain off GitHub Pages.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-number">03</span>
+          <h3>Take action</h3>
+          <p>Results should lead to practical steps such as password changes, 2FA, and source-level removal requests.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="privacy-band" id="privacy">
+      <div class="container privacy-inner">
+        <div>
+          <span class="eyebrow">Privacy by design</span>
+          <h2>Your email should not become another data point.</h2>
+          <p>The static site does not save scans in localStorage or cookies. When a backend is added, data retention should remain opt-in and minimal.</p>
+        </div>
+        <a class="secondary-btn" href="privacy.html">Privacy details</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <div>
+        <strong>ITDelhi Email Exposure Checker</strong>
+        <p>Security awareness tool for consented email checks.</p>
+      </div>
+      <div class="footer-links">
+        <a href="privacy.html">Privacy</a>
+        <a href="about.html">About</a>
+        <a href="https://github.com/Faizalemam/email-exposure-checker" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/app.js" defer></script>
+</body>
+</html>
