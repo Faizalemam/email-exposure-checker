@@ -32,10 +32,10 @@
       <div class="hero-copy">
         <span class="eyebrow"><span class="pulse-dot"></span> Privacy-first security tool</span>
         <h1>See where your email may be exposed.</h1>
-        <p class="hero-text">Check an email address you own. When the secure backend is connected, we verify ownership by email OTP before any exposure lookup runs.</p>
+        <p class="hero-text">Verify your inbox, run email-domain security checks, and optionally use Gemini with Google Search grounding to research public web exposure.</p>
         <div class="trust-row">
           <span>✓ Email OTP verification</span>
-          <span>✓ No password needed</span>
+          <span>✓ Gemini grounded search</span>
           <span>✓ API keys stay server-side</span>
         </div>
       </div>
@@ -51,11 +51,11 @@
             <span class="input-icon">@</span>
             <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required aria-describedby="emailHelp formError">
           </div>
-          <p class="field-help" id="emailHelp">Use your own email address. A 6-digit verification code will be sent before a real scan.</p>
+          <p class="field-help" id="emailHelp">Use your own email address. A 6-digit verification code is required before the real scan.</p>
 
           <label class="consent">
             <input id="consent" type="checkbox" required>
-            <span>I confirm I own this email address and authorize this security check.</span>
+            <span>I confirm I own this email address and authorize server-side security checks and, when configured, Gemini public-web research for this address.</span>
           </label>
 
           <button class="primary-btn" id="scanBtn" type="submit">
@@ -108,6 +108,7 @@
           <div class="check-row"><span class="check-icon neutral" id="spfIcon">i</span><div><strong>SPF</strong><small id="spfStatus">Not checked</small></div></div>
           <div class="check-row"><span class="check-icon neutral" id="dmarcIcon">i</span><div><strong>DMARC</strong><small id="dmarcStatus">Not checked</small></div></div>
           <div class="check-row"><span class="check-icon warning" id="breachIcon">!</span><div><strong>Breach exposure</strong><small id="breachStatus">Secure provider required</small></div></div>
+          <div class="check-row"><span class="check-icon neutral" id="aiIcon">i</span><div><strong>Gemini web research</strong><small id="aiStatus">Not configured</small></div></div>
         </article>
 
         <article class="panel recommendation-card">
@@ -115,27 +116,39 @@
           <ol>
             <li><span>1</span><div><strong>Use a unique password</strong><small>Never reuse the same password across services.</small></div></li>
             <li><span>2</span><div><strong>Enable 2FA</strong><small>Prefer an authenticator app or security key where available.</small></div></li>
-            <li><span>3</span><div><strong>Review old accounts</strong><small>Delete accounts you no longer use and remove unnecessary public data.</small></div></li>
+            <li><span>3</span><div><strong>Review public exposure</strong><small>Remove unnecessary public contact details and old accounts.</small></div></li>
           </ol>
           <a class="text-link" href="privacy.html">Read removal & privacy guidance →</a>
         </article>
+
+        <article class="panel ai-report-card" id="aiReportCard" hidden>
+          <div class="ai-report-head">
+            <div><span class="eyebrow">Gemini + Google Search</span><h3>Grounded public-web research</h3></div>
+            <span class="status-badge">AI research</span>
+          </div>
+          <pre id="aiSummary"></pre>
+          <div id="aiSourcesWrap" hidden>
+            <h4>Sources</h4>
+            <div class="source-list" id="aiSources"></div>
+          </div>
+        </article>
       </div>
 
-      <div class="notice-box"><strong>Important:</strong> No fake breach result is generated. If the breach provider is not configured, the dashboard says so explicitly.</div>
+      <div class="notice-box"><strong>Important:</strong> Gemini research is limited to public web sources after email ownership verification. The tool does not use password-reset/login probes, private databases, stolen credentials, or hidden-account inference.</div>
     </section>
 
     <section class="info-section container" id="how">
       <div class="section-heading centered"><span class="eyebrow">How it works</span><h2>Designed to check exposure without exposing you further.</h2></div>
       <div class="feature-grid">
         <article class="feature-card"><span class="feature-number">01</span><h3>Verify ownership</h3><p>A one-time code is emailed to the address before the real scan runs.</p></article>
-        <article class="feature-card"><span class="feature-number">02</span><h3>Analyze safely</h3><p>MX, SPF and DMARC checks run server-side. Optional breach-provider credentials remain in Script Properties.</p></article>
+        <article class="feature-card"><span class="feature-number">02</span><h3>Research safely</h3><p>MX, SPF and DMARC checks run server-side. Gemini can use Google Search grounding for public-web research with citations.</p></article>
         <article class="feature-card"><span class="feature-number">03</span><h3>Take action</h3><p>Use verified findings to change passwords, enable 2FA and submit source-level removal requests.</p></article>
       </div>
     </section>
 
     <section class="privacy-band" id="privacy">
       <div class="container privacy-inner">
-        <div><span class="eyebrow">Privacy by design</span><h2>Your email should not become another data point.</h2><p>The frontend does not save scans in localStorage or cookies. OTP data is temporary and expires automatically in the backend cache.</p></div>
+        <div><span class="eyebrow">Privacy by design</span><h2>Your email should not become another data point.</h2><p>The frontend does not save scans in localStorage or cookies. OTP data expires automatically. Gemini receives the verified address only when its API key is configured and the owner has authorized the scan.</p></div>
         <a class="secondary-btn" href="privacy.html">Privacy details</a>
       </div>
     </section>
