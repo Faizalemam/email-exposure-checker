@@ -28,12 +28,17 @@
   const spfStatus = document.getElementById('spfStatus');
   const dmarcStatus = document.getElementById('dmarcStatus');
   const breachStatus = document.getElementById('breachStatus');
+  const aiStatus = document.getElementById('aiStatus');
+  const aiReportCard = document.getElementById('aiReportCard');
+  const aiSummary = document.getElementById('aiSummary');
+  const aiSourcesWrap = document.getElementById('aiSourcesWrap');
+  const aiSources = document.getElementById('aiSources');
 
   if (!form) return;
 
   modeBadge.textContent = API_ENDPOINT ? 'Secure API' : 'Frontend demo';
   microcopy.textContent = API_ENDPOINT
-    ? 'Ownership is verified by a 6-digit email code before the server-side scan runs.'
+    ? 'Ownership is verified by a 6-digit email code before DNS, breach-provider and Gemini public-web checks run.'
     : 'Safe local validation only. Connect the Apps Script /exec URL in js/config.js to enable OTP and real checks.';
   scanButton.querySelector('span:first-child').textContent = API_ENDPOINT ? 'Send verification code' : 'Check local validation';
 
@@ -81,7 +86,7 @@
 
   async function apiCall(payload) {
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 20000);
+    const timeout = window.setTimeout(() => controller.abort(), 45000);
     try {
       const response = await fetch(API_ENDPOINT, {
         method: 'POST',
@@ -100,7 +105,48 @@
     }
   }
 
+  function resetAiReport() {
+    if (aiReportCard) aiReportCard.hidden = true;
+    if (aiSummary) aiSummary.textContent = '';
+    if (aiSources) aiSources.replaceChildren();
+    if (aiSourcesWrap) aiSourcesWrap.hidden = true;
+  }
+
+  function renderAiReport(data) {
+    resetAiReport();
+    if (!data.gemini_configured) {
+      aiStatus.textContent = 'Gemini API key not configured';
+      setIcon('aiIcon', null);
+      return;
+    }
+    if (!data.gemini_ok || !data.ai_summary) {
+      aiStatus.textContent = 'Gemini configured, but research did not return a usable result';
+      setIcon('aiIcon', false);
+      return;
+    }
+
+    aiStatus.textContent = 'Grounded Google Search research completed';
+    setIcon('aiIcon', true);
+    aiReportCard.hidden = false;
+    aiSummary.textContent = data.ai_summary;
+
+    const sources = Array.isArray(data.ai_sources) ? data.ai_sources : [];
+    if (sources.length) {
+      sources.forEach((source, index) => {
+        if (!source || !source.url) return;
+        const a = document.createElement('a');
+        a.href = source.url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.textContent = `${index + 1}. ${source.title || new URL(source.url).hostname}`;
+        aiSources.appendChild(a);
+      });
+      aiSourcesWrap.hidden = aiSources.children.length === 0;
+    }
+  }
+
   function renderDemo(email) {
+    resetAiReport();
     scoreRing.style.setProperty('--score', 0);
     scoreValue.textContent = '—';
     riskLabel.textContent = 'Exposure not scored';
@@ -112,12 +158,14 @@
     spfStatus.textContent = 'Backend not connected';
     dmarcStatus.textContent = 'Backend not connected';
     breachStatus.textContent = 'Breach provider not queried';
+    aiStatus.textContent = 'Backend not connected';
     setIcon('formatIcon', true);
     setIcon('verifyIcon', null);
     setIcon('mxIcon', null);
     setIcon('spfIcon', null);
     setIcon('dmarcIcon', null);
     setIcon('breachIcon', null);
+    setIcon('aiIcon', null);
   }
 
   function renderApiResult(email, data) {
@@ -152,6 +200,7 @@
     setIcon('spfIcon', Boolean(domainSecurity.spf_found));
     setIcon('dmarcIcon', Boolean(domainSecurity.dmarc_found));
     setIcon('breachIcon', data.breach_provider_configured && Number.isFinite(breachCount) ? breachCount === 0 : null);
+    renderAiReport(data);
   }
 
   form.addEventListener('submit', async (event) => {
@@ -167,7 +216,7 @@
       return;
     }
     if (!consentInput.checked) {
-      errorBox.textContent = 'Please confirm ownership and authorization before continuing.';
+      errorBox.textContent = 'Please confirm ownership and authorize the security checks before continuing.';
       consentInput.focus();
       return;
     }
@@ -206,18 +255,20 @@
       return;
     }
 
-    setButtonLoading(verifyButton, true, 'Verifying & scanning…', 'Verify & scan');
+    setButtonLoading(verifyButton, true, 'Verifying & researching…', 'Verify & scan');
     try {
       const data = await apiCall({ action: 'verify_and_scan', email, code, consent: true });
       if (!data.ok) throw new Error(data.message || 'Verification failed.');
       renderApiResult(email, data);
-      successBox.textContent = 'Email verified and scan completed.';
+      successBox.textContent = data.gemini_ok
+        ? 'Email verified. Security checks and Gemini grounded web research completed.'
+        : 'Email verified and security scan completed.';
       results.hidden = false;
       results.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (error) {
       errorBox.textContent = error.name === 'AbortError' ? 'The secure checker timed out.' : (error.message || 'Verification failed.');
     } finally {
-      setButtonLoading(verifyButton, false, 'Verifying & scanning…', 'Verify & scan');
+      setButtonLoading(verifyButton, false, 'Verifying & researching…', 'Verify & scan');
     }
   });
 
@@ -225,6 +276,7 @@
     results.hidden = true;
     form.reset();
     otpPanel.hidden = true;
+    resetAiReport();
     clearMessages();
     scanButton.querySelector('span:first-child').textContent = API_ENDPOINT ? 'Send verification code' : 'Check local validation';
     emailInput.focus();
