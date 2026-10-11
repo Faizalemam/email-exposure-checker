@@ -72,7 +72,7 @@
 
   function renderDemo(email) {
     scoreRing.style.setProperty('--score', 0);
-    scoreValue.textContent = '0';
+    scoreValue.textContent = '—';
     riskLabel.textContent = 'Exposure not scored';
     maskedEmail.textContent = maskEmail(email);
     scoreNote.textContent = 'Email format and domain were checked locally. A secure backend must be connected before breach or public-footprint findings can be reported.';
